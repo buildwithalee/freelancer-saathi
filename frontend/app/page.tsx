@@ -29,6 +29,7 @@ import {
   BadgeCheck,
   Activity,
   Radio,
+  Plus,
 } from "lucide-react";
 
 import SaathiLogo from "./components/SaathiLogo";
@@ -288,6 +289,13 @@ const [chatError, setChatError] = useState("");
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
   const [workspaceError, setWorkspaceError] = useState("");
   const [documentNotice, setDocumentNotice] = useState("");
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentPlatform, setPaymentPlatform] = useState("Upwork");
+  const [paymentSaving, setPaymentSaving] = useState(false);
+  const [paymentNotice, setPaymentNotice] = useState("");
+  const [paymentNoticeType, setPaymentNoticeType] = useState<"success" | "error" | "">("");
 
   const [dashboardLoading, setDashboardLoading] =
     useState(true);
@@ -331,12 +339,62 @@ const [chatError, setChatError] = useState("");
     }
   }
 
+  async function handleAddPayment() {
+    const amount = Number(paymentAmount);
+    const platform = paymentPlatform.trim();
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setPaymentNotice("Enter a valid payment amount greater than 0.");
+      setPaymentNoticeType("error");
+      return;
+    }
+
+    if (!platform) {
+      setPaymentNotice("Enter the freelance platform or client source.");
+      setPaymentNoticeType("error");
+      return;
+    }
+
+    setPaymentSaving(true);
+    setPaymentNotice("");
+    setPaymentNoticeType("");
+
+    try {
+      await apiPost("/payments/", {
+        amount,
+        currency: "USD",
+        platform,
+      });
+
+      // Ask the deterministic workflow to analyze the new available balance.
+      // A workflow failure must not undo a successfully recorded payment.
+      try {
+        await apiPost("/workflow/analyze", {});
+      } catch {
+        // Dashboard refresh below will still show the newly recorded payment.
+      }
+
+      setPaymentNotice(`${money(amount)} payment from ${platform} recorded successfully.`);
+      setPaymentNoticeType("success");
+      setPaymentAmount("");
+      setPaymentPlatform("Upwork");
+      setPaymentModalOpen(false);
+      await loadDashboard();
+      await loadWorkspaceData();
+    } catch (error) {
+      setPaymentNotice(error instanceof Error ? error.message : "Payment could not be recorded.");
+      setPaymentNoticeType("error");
+    } finally {
+      setPaymentSaving(false);
+    }
+  }
+
   async function generateReceipt(transactionId: string) {
     setDocumentNotice("");
     try {
       await apiPost(`/documents/receipt/${transactionId}`, {});
       setDocumentNotice(`Receipt for ${transactionId} is ready.`);
-      const base = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
+      const base = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === "production" ? "/api" : "http://127.0.0.1:8000");
       window.open(`${base}/documents/receipt/${transactionId}/download`, "_blank", "noopener,noreferrer");
     } catch (error) {
       setDocumentNotice(error instanceof Error ? error.message : "Receipt could not be generated.");
@@ -792,6 +850,16 @@ const [chatError, setChatError] = useState("");
                 />
 
                 <input
+                  id="saathi-global-search"
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && message.trim()) {
+                      event.preventDefault();
+                      setActiveSection("AI Saathi");
+                      void handleSendMessage();
+                    }
+                  }}
                   className="min-w-0 flex-1 bg-transparent text-[9px] text-slate-300 outline-none placeholder:text-slate-500"
                   placeholder="Ask Saathi anything..."
                 />
@@ -850,13 +918,33 @@ const [chatError, setChatError] = useState("");
 
               </div>
 
-              <button className="relative grid h-9 w-9 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.025] text-slate-400">
-
-                <Bell size={15} />
-
-                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-red-400" />
-
-              </button>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setNotificationsOpen((open) => !open)}
+                  className="relative grid h-9 w-9 place-items-center rounded-xl border border-white/[0.07] bg-white/[0.025] text-slate-400 transition hover:border-cyan-300/20 hover:text-white"
+                  aria-label="Open notifications"
+                >
+                  <Bell size={15} />
+                  {(pendingApprovalCount > 0 || availableIncome > 0) && (
+                    <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-red-400" />
+                  )}
+                </button>
+                {notificationsOpen && (
+                  <div className="absolute right-0 top-12 z-[80] w-[310px] overflow-hidden rounded-2xl border border-cyan-100/[0.12] bg-[#071725]/98 shadow-2xl backdrop-blur-2xl">
+                    <div className="border-b border-white/[0.06] px-4 py-3">
+                      <p className="text-[10px] font-semibold text-white">Notifications</p>
+                      <p className="mt-1 text-[7px] text-slate-500">Live financial alerts from Saathi</p>
+                    </div>
+                    <div className="space-y-1 p-2">
+                      {pendingApprovalCount > 0 && <NotificationItem title="Guardian approval required" detail={`${pendingApprovalCount} request${pendingApprovalCount === 1 ? "" : "s"} waiting for your decision`} tone="amber" />}
+                      {availableIncome > 0 && <NotificationItem title="Funds available" detail={`${money(availableIncome)} is ready for conversion analysis`} tone="cyan" />}
+                      {!dashboardError && <NotificationItem title="Systems operational" detail="Frontend, API and financial agents are connected" tone="green" />}
+                      {dashboardError && <NotificationItem title="Backend sync needs attention" detail={dashboardError} tone="red" />}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="grid h-9 w-9 place-items-center rounded-full border border-cyan-100/15 bg-[#102437] text-[9px] text-slate-300">
                 AR
@@ -1606,8 +1694,10 @@ const [chatError, setChatError] = useState("");
                       </button>
 
                       <button
+                        type="button"
+                        onClick={() => void handleSendMessage()}
                         disabled={
-                          !message.trim()
+                          !message.trim() || chatLoading
                         }
                         className="grid h-9 w-[58px] place-items-center rounded-lg bg-gradient-to-br from-cyan-300 to-emerald-400 text-[#03110f] shadow-[0_0_20px_rgba(45,212,191,0.18)] disabled:opacity-30"
                       >
@@ -2185,12 +2275,32 @@ const [chatError, setChatError] = useState("");
                 onDecision={handleApprovalDecision}
                 onGenerateReceipt={generateReceipt}
                 documentNotice={documentNotice}
+                onAddPayment={() => setPaymentModalOpen(true)}
+                paymentNotice={paymentNotice}
+                paymentNoticeType={paymentNoticeType}
               />
             )}
 
           </div>
 
         </section>
+
+        {paymentModalOpen && (
+          <div className="fixed inset-0 z-[100] grid place-items-center bg-black/70 p-4 backdrop-blur-sm" onMouseDown={() => !paymentSaving && setPaymentModalOpen(false)}>
+            <motion.div initial={{ opacity: 0, scale: 0.96, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} onMouseDown={(event) => event.stopPropagation()} className="w-full max-w-[460px] rounded-[22px] border border-cyan-200/[0.16] bg-[#071725] p-5 shadow-[0_30px_100px_rgba(0,0,0,0.55)]">
+              <div className="flex items-start justify-between gap-4">
+                <div><p className="text-[7px] font-semibold uppercase tracking-[0.18em] text-cyan-300">Live Backend</p><h3 className="mt-2 text-[20px] font-semibold text-white">Record Payment</h3><p className="mt-1 text-[8px] text-slate-500">Add verified freelance income to your production ledger.</p></div>
+                <button type="button" onClick={() => setPaymentModalOpen(false)} disabled={paymentSaving} className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.08] text-slate-400 hover:text-white"><X size={15} /></button>
+              </div>
+              <div className="mt-5 space-y-4">
+                <label className="block"><span className="text-[8px] text-slate-400">Amount (USD)</span><input autoFocus inputMode="decimal" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} placeholder="500.00" className="mt-2 w-full rounded-xl border border-cyan-100/[0.12] bg-[#03101a] px-4 py-3 text-[11px] text-white outline-none focus:border-cyan-300/35" /></label>
+                <label className="block"><span className="text-[8px] text-slate-400">Platform / Client Source</span><input value={paymentPlatform} onChange={(e) => setPaymentPlatform(e.target.value)} placeholder="Upwork" className="mt-2 w-full rounded-xl border border-cyan-100/[0.12] bg-[#03101a] px-4 py-3 text-[11px] text-white outline-none focus:border-cyan-300/35" /></label>
+                <div className="rounded-xl border border-amber-300/10 bg-amber-300/[0.04] px-3 py-2 text-[7px] leading-4 text-slate-400">Sandbox financial record only. Guardian approval is still required before any mock conversion can execute.</div>
+                <button type="button" onClick={() => void handleAddPayment()} disabled={paymentSaving} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 py-3 text-[9px] font-bold text-[#03110f] disabled:opacity-40"><Plus size={14} />{paymentSaving ? "Recording..." : "Record Payment"}</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
 
       </div>
 
@@ -2217,6 +2327,9 @@ function WorkspaceView({
   onDecision,
   onGenerateReceipt,
   documentNotice,
+  onAddPayment,
+  paymentNotice,
+  paymentNoticeType,
 }: {
   section: SectionName;
   income: IncomeSummary | null;
@@ -2236,6 +2349,9 @@ function WorkspaceView({
   onDecision: (decision: "APPROVED" | "REJECTED") => Promise<void>;
   onGenerateReceipt: (transactionId: string) => Promise<void>;
   documentNotice: string;
+  onAddPayment: () => void;
+  paymentNotice: string;
+  paymentNoticeType: "success" | "error" | "";
 }) {
   const titleMap: Record<SectionName, string> = {
     Dashboard: "Dashboard",
@@ -2316,7 +2432,16 @@ function WorkspaceView({
         </>
       )}
 
-      {section === "Payments" && <DataPanel title="Payment Ledger" subtitle={`${payments.length} payment record(s) loaded`}><PaymentRows payments={payments} /></DataPanel>}
+      {section === "Payments" && (
+        <>
+          {paymentNotice && <div className={`mt-4 rounded-xl border px-4 py-3 text-[8px] ${paymentNoticeType === "error" ? "border-red-400/20 bg-red-500/[0.07] text-red-200" : "border-emerald-300/20 bg-emerald-400/[0.07] text-emerald-200"}`}>{paymentNotice}</div>}
+          <section className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-[18px] border border-cyan-300/[0.12] bg-gradient-to-r from-cyan-400/[0.05] to-violet-500/[0.04] p-4">
+            <div><p className="text-[10px] font-semibold text-white">Record freelance income</p><p className="mt-1 text-[7px] text-slate-500">Add a USD payment and immediately sync Income, Analytics and Guardian.</p></div>
+            <button type="button" onClick={onAddPayment} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-4 py-2.5 text-[8px] font-bold text-[#03110f] shadow-[0_0_22px_rgba(34,211,238,0.12)]"><Plus size={14} /> Add Payment</button>
+          </section>
+          <DataPanel title="Payment Ledger" subtitle={`${payments.length} payment record(s) loaded`}><PaymentRows payments={payments} /></DataPanel>
+        </>
+      )}
 
       {section === "Approvals" && (
         <DataPanel title="Guardian Authorization Queue" subtitle="No financial action executes without explicit approval">
@@ -2348,6 +2473,11 @@ function WorkspaceView({
       )}
     </motion.div>
   );
+}
+
+function NotificationItem({ title, detail, tone }: { title: string; detail: string; tone: "cyan" | "green" | "amber" | "red" }) {
+  const dot = tone === "amber" ? "bg-amber-300" : tone === "red" ? "bg-red-400" : tone === "green" ? "bg-emerald-300" : "bg-cyan-300";
+  return <div className="flex gap-3 rounded-xl px-3 py-3 transition hover:bg-white/[0.035]"><span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dot}`} /><div><p className="text-[8px] font-semibold text-white">{title}</p><p className="mt-1 text-[7px] leading-4 text-slate-500">{detail}</p></div></div>;
 }
 
 function PageHeader({ icon, title, subtitle, badge }: { icon: ReactNode; title: string; subtitle: string; badge: string }) {
