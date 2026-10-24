@@ -1,0 +1,672 @@
+@import "tailwindcss";
+
+/* =========================================================
+   FREELANCER SAATHI
+   Global Fintech Design System
+   ========================================================= */
+
+:root {
+  --background: #03101a;
+  --foreground: #f8fbff;
+
+  --cyan: #5fffe1;
+  --teal: #20d9c2;
+  --blue: #25a9ef;
+  --violet: #9165ff;
+  --green: #45e6ad;
+  --amber: #ffd36a;
+
+  --panel: rgba(6, 21, 34, 0.78);
+  --panel-strong: rgba(5, 18, 29, 0.94);
+
+  --border: rgba(180, 236, 255, 0.08);
+  --border-cyan: rgba(95, 255, 225, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+  background: var(--background);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+
+  color: var(--foreground);
+
+  background:
+    radial-gradient(
+      circle at 72% 5%,
+      rgba(27, 193, 210, 0.07),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 93% 35%,
+      rgba(125, 77, 255, 0.045),
+      transparent 27%
+    ),
+    radial-gradient(
+      circle at 38% 80%,
+      rgba(22, 173, 191, 0.035),
+      transparent 30%
+    ),
+    linear-gradient(
+      145deg,
+      #03101a 0%,
+      #04121d 42%,
+      #03101a 100%
+    );
+
+  font-family:
+    var(--font-geist-sans),
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* =========================================================
+   BACKGROUND GRID
+   ========================================================= */
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+
+  pointer-events: none;
+
+  background-image:
+    linear-gradient(
+      rgba(121, 216, 234, 0.018) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(121, 216, 234, 0.018) 1px,
+      transparent 1px
+    );
+
+  background-size: 46px 46px;
+
+  mask-image:
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.75),
+      transparent 90%
+    );
+
+  content: "";
+}
+
+/* =========================================================
+   AMBIENT APP LIGHT
+   ========================================================= */
+
+body::after {
+  position: fixed;
+  top: -280px;
+  left: 35%;
+  z-index: -1;
+
+  width: 850px;
+  height: 650px;
+
+  pointer-events: none;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(32, 217, 194, 0.065) 0%,
+      rgba(37, 169, 239, 0.025) 40%,
+      transparent 72%
+    );
+
+  filter: blur(30px);
+
+  content: "";
+}
+
+/* =========================================================
+   BASE ELEMENTS
+   ========================================================= */
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(95, 255, 225, 0.45);
+  outline-offset: 2px;
+}
+
+::selection {
+  color: #02110f;
+  background: #5fffe1;
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #03101a;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid #03101a;
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(95, 255, 225, 0.32),
+      rgba(92, 110, 255, 0.22)
+    );
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(95, 255, 225, 0.52),
+      rgba(145, 101, 255, 0.36)
+    );
+}
+
+/* =========================================================
+   FS LOGO
+   ========================================================= */
+
+.fs-logo {
+  position: relative;
+
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+
+  isolation: isolate;
+}
+
+.fs-logo-aura {
+  position: absolute;
+  inset: 7%;
+  z-index: -1;
+
+  border-radius: 45%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(79, 255, 226, 0.46) 0%,
+      rgba(31, 186, 226, 0.24) 37%,
+      rgba(145, 101, 255, 0.12) 58%,
+      transparent 77%
+    );
+
+  filter: blur(15px);
+
+  animation: fsAura 3.8s ease-in-out infinite;
+}
+
+.fs-logo-svg {
+  position: relative;
+  z-index: 2;
+
+  overflow: visible;
+
+  filter:
+    drop-shadow(
+      0 5px 13px
+      rgba(42, 232, 208, 0.18)
+    )
+    drop-shadow(
+      0 0 22px
+      rgba(65, 177, 255, 0.08)
+    );
+}
+
+@keyframes fsAura {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+/* =========================================================
+   PANEL DEPTH
+   Adds subtle premium glass feel to dashboard surfaces.
+   ========================================================= */
+
+section[class*="rounded-"],
+article[class*="rounded-"] {
+  position: relative;
+  isolation: isolate;
+}
+
+section[class*="rounded-"]::before,
+article[class*="rounded-"]::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+
+  pointer-events: none;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      125deg,
+      rgba(255, 255, 255, 0.018),
+      transparent 28%,
+      transparent 72%,
+      rgba(58, 231, 214, 0.012)
+    );
+
+  content: "";
+}
+
+/* =========================================================
+   TOP HERO FINISH
+   ========================================================= */
+
+main section {
+  transform: translateZ(0);
+}
+
+/* Gives hero / cards a subtle edge highlight */
+main section[class*="border"],
+main article[class*="border"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.018),
+    0 16px 45px rgba(0, 0, 0, 0.055);
+}
+
+/* =========================================================
+   FINTECH CARD HOVER
+   ========================================================= */
+
+main article,
+main section {
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+main article:hover {
+  border-color: rgba(108, 239, 226, 0.13);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 20px 55px rgba(0, 0, 0, 0.1);
+}
+
+/* =========================================================
+   INPUT POLISH
+   ========================================================= */
+
+input {
+  caret-color: #5fffe1;
+}
+
+input::placeholder {
+  transition: opacity 180ms ease;
+}
+
+input:focus::placeholder {
+  opacity: 0.55;
+}
+
+/* =========================================================
+   BUTTON FEEDBACK
+   ========================================================= */
+
+button {
+  cursor: pointer;
+
+  transition:
+    transform 180ms ease,
+    filter 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   HERO CORE ATMOSPHERE
+   ========================================================= */
+
+@keyframes coreAtmosphere {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes coreSweep {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   KPI CARDS
+   ========================================================= */
+
+main article[class*="from-cyan"] {
+  box-shadow:
+    inset 0 1px 0 rgba(150, 255, 244, 0.035),
+    0 12px 35px rgba(20, 197, 208, 0.035);
+}
+
+main article[class*="from-violet"] {
+  box-shadow:
+    inset 0 1px 0 rgba(220, 200, 255, 0.035),
+    0 12px 35px rgba(127, 81, 255, 0.04);
+}
+
+main article[class*="from-emerald"] {
+  box-shadow:
+    inset 0 1px 0 rgba(167, 255, 218, 0.035),
+    0 12px 35px rgba(41, 205, 146, 0.035);
+}
+
+/* =========================================================
+   AGENT JOURNEY
+   ========================================================= */
+
+@keyframes journeyPulse {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+/* =========================================================
+   GUARDIAN AUTHORIZATION AREA
+   ========================================================= */
+
+@keyframes guardianEdge {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* amber authorization surfaces get a controlled glow */
+section[class*="border-amber"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 180, 0.025),
+    0 0 0 1px rgba(255, 202, 92, 0.015),
+    0 22px 65px rgba(0, 0, 0, 0.12),
+    0 0 45px rgba(245, 158, 11, 0.025);
+}
+
+/* =========================================================
+   CHAT
+   ========================================================= */
+
+@keyframes onlinePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+  }
+
+  50% {
+    box-shadow: 0 0 12px 2px rgba(52, 211, 153, 0.12);
+  }
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+aside {
+  box-shadow:
+    18px 0 60px rgba(0, 0, 0, 0.12);
+}
+
+aside nav button {
+  position: relative;
+  overflow: hidden;
+}
+
+aside nav button::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -45%;
+
+  width: 28%;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(120, 255, 238, 0.045),
+      transparent
+    );
+
+  transform: skewX(-18deg);
+
+  transition: left 450ms ease;
+
+  content: "";
+}
+
+aside nav button:hover::after {
+  left: 120%;
+}
+
+/* =========================================================
+   TOP BAR
+   ========================================================= */
+
+header {
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================================
+   TEXT RENDERING
+   ========================================================= */
+
+h1,
+h2,
+h3,
+p {
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3 {
+  text-rendering: geometricPrecision;
+}
+
+/* =========================================================
+   SUBTLE NOISE WITHOUT EXTERNAL IMAGE
+   ========================================================= */
+
+main::after {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+
+  pointer-events: none;
+
+  background-image:
+    radial-gradient(
+      rgba(255, 255, 255, 0.13) 0.4px,
+      transparent 0.4px
+    );
+
+  background-size: 5px 5px;
+
+  opacity: 0.018;
+
+  content: "";
+}
+
+/* =========================================================
+   DESKTOP SCALE POLISH
+   ========================================================= */
+
+@media (min-width: 1536px) {
+  body {
+    font-size: 16px;
+  }
+}
+
+/* =========================================================
+   LAPTOP
+   ========================================================= */
+
+@media (max-width: 1535px) {
+  body::before {
+    background-size: 42px 42px;
+  }
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1024px) {
+  body::before {
+    opacity: 0.55;
+  }
+
+  body::after {
+    left: 10%;
+    width: 650px;
+    height: 500px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+  body {
+    background:
+      radial-gradient(
+        circle at 50% 0%,
+        rgba(32, 217, 194, 0.065),
+        transparent 28%
+      ),
+      #03101a;
+  }
+
+  body::before {
+    background-size: 34px 34px;
+    opacity: 0.4;
+  }
+
+  body::after {
+    top: -200px;
+    left: -150px;
+
+    width: 500px;
+    height: 420px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION / ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

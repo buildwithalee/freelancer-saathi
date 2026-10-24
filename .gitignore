@@ -1,0 +1,32 @@
+# Secrets
+.env
+.env.*
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite
+*.sqlite3
+generated_documents/
+
+# Frontend
+node_modules/
+.next/
+out/
+dist/
+
+# Temporary / backup
+backend-safe/
+*.zip
+
+# Logs
+*.log
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
