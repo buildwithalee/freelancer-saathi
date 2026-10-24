@@ -4,25 +4,52 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Load local .env file during development.
-# On production hosting, environment variables will be provided by the platform.
+
+# ============================================================
+# ENVIRONMENT
+# ============================================================
+
+# Local development uses .env.
+# Production platforms such as Vercel provide environment
+# variables directly.
 load_dotenv()
 
 DEFAULT_DATABASE_URL = "sqlite:///./freelancer_saathi.db"
 
-DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL).strip()
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    DEFAULT_DATABASE_URL,
+).strip()
 
-# Some hosting providers may still return the old postgres:// scheme.
-# SQLAlchemy expects postgresql://.
+
+# ============================================================
+# DATABASE URL NORMALIZATION
+# ============================================================
+
+# Production uses psycopg 3.
+# Normalize PostgreSQL URLs so SQLAlchemy explicitly uses
+# the installed psycopg driver.
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace(
         "postgres://",
-        "postgresql://",
+        "postgresql+psycopg://",
         1,
     )
 
-# SQLite requires check_same_thread=False.
-# PostgreSQL and other production databases do not.
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg://",
+        1,
+    )
+
+
+# ============================================================
+# ENGINE CONFIGURATION
+# ============================================================
+
+# SQLite needs check_same_thread=False.
+# PostgreSQL / Neon does not.
 connect_args = (
     {"check_same_thread": False}
     if DATABASE_URL.startswith("sqlite")
@@ -35,6 +62,11 @@ engine = create_engine(
     pool_pre_ping=True,
 )
 
+
+# ============================================================
+# SESSION
+# ============================================================
+
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
@@ -43,6 +75,10 @@ SessionLocal = sessionmaker(
 
 Base = declarative_base()
 
+
+# ============================================================
+# DATABASE DEPENDENCY
+# ============================================================
 
 def get_db():
     db = SessionLocal()
