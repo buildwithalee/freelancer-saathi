@@ -1,5 +1,8 @@
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "production"
+    ? "/api"
+    : "http://127.0.0.1:8000");
 
 export const API_BASE_URL = BASE_URL;
 
@@ -16,15 +19,22 @@ export async function apiRequest<T>(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+  const normalizedEndpoint = endpoint.startsWith("/")
+    ? endpoint
+    : `/${endpoint}`;
+
   try {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      ...fetchOptions,
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...fetchOptions.headers,
-      },
-    });
+    const response = await fetch(
+      `${BASE_URL}${normalizedEndpoint}`,
+      {
+        ...fetchOptions,
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          ...fetchOptions.headers,
+        },
+      }
+    );
 
     if (!response.ok) {
       let message = `Request failed with status ${response.status}`;
@@ -39,7 +49,7 @@ export async function apiRequest<T>(
               : JSON.stringify(errorData.detail);
         }
       } catch {
-        // Keep default error message.
+        // Keep the default safe error message.
       }
 
       throw new Error(message);
@@ -47,7 +57,10 @@ export async function apiRequest<T>(
 
     return (await response.json()) as T;
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
+    if (
+      error instanceof Error &&
+      error.name === "AbortError"
+    ) {
       throw new Error("Backend request timed out.");
     }
 
@@ -69,6 +82,9 @@ export function apiPost<T>(
 ) {
   return apiRequest<T>(endpoint, {
     method: "POST",
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body:
+      body === undefined
+        ? undefined
+        : JSON.stringify(body),
   });
 }
