@@ -51,8 +51,9 @@ app = FastAPI(
         "with human-controlled financial actions."
     ),
     version="1.0.0",
-    docs_url=None if IS_PRODUCTION else "/docs",
-    redoc_url=None if IS_PRODUCTION else "/redoc",
+    docs_url=None if IS_PRODUCTION else "/api/docs",
+    redoc_url=None if IS_PRODUCTION else "/api/redoc",
+    openapi_url=None if IS_PRODUCTION else "/api/openapi.json",
 )
 
 
@@ -105,20 +106,23 @@ app.add_middleware(
 # API ROUTERS
 # ============================================================
 
-app.include_router(payments_router)
-app.include_router(agents_router)
-app.include_router(approvals_router)
-app.include_router(bank_router)
-app.include_router(documents_router)
-app.include_router(workflow_router)
-app.include_router(chat_router)
+API_PREFIX = "/api"
+
+app.include_router(payments_router, prefix=API_PREFIX)
+app.include_router(agents_router, prefix=API_PREFIX)
+app.include_router(approvals_router, prefix=API_PREFIX)
+app.include_router(bank_router, prefix=API_PREFIX)
+app.include_router(documents_router, prefix=API_PREFIX)
+app.include_router(workflow_router, prefix=API_PREFIX)
+app.include_router(chat_router, prefix=API_PREFIX)
 
 
 # ============================================================
 # ROOT ENDPOINT
 # ============================================================
 
-@app.get("/")
+@app.get("/api")
+@app.get("/api/")
 def home():
     return {
         "status": "success",
@@ -131,7 +135,7 @@ def home():
 # HEALTH CHECK
 # ============================================================
 
-@app.get("/health")
+@app.get("/api/health")
 def health_check():
     return {
         "status": "healthy",
